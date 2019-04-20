@@ -1,9 +1,18 @@
+// References:  1) https://stackoverflow.com/questions/20089582/how-to-get-a-url-parameter-in-express
+// 				2) https://www.browserless.io/
+//				3) https://github.com/pocketjoso/penthouse/blob/master/examples/custom-browser.js
+//				4) https://meyerweb.com/eric/tools/dencoder/
+//				5) https://www.tutorialspoint.com/nodejs/nodejs_response_object.htm
+//				6) 
+
+
 const penthouse = require('penthouse')
 const puppeteer = require('puppeteer') // installed by penthouse
 const http = require('http');
 const critical = require('critical');
 const { promisify } = require('util')
 const express = require('express');
+const CleanCss = require('clean-css');
 
 let IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
@@ -53,7 +62,10 @@ function criticalReader(res, url, width, height) {
 		}).then(function (result) {
 			console.log("promise resolved");			
 			res.status(200);
-			res.send({ result: result });
+			
+			let cleanedUpCcss = new CleanCss({ compress: true }).minify(result).styles;
+			
+			res.send({ result: cleanedUpCcss });
 			res.end();
 		}).catch(function (err) {
 			 console.log("promise rejected");

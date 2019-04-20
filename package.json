@@ -9,6 +9,7 @@
         "start": "node index.js"
     },
     "devDependencies": {
+        "clean-css": "^4.2.1",
         "critical": "^1.3.4",
         "express": "^4.16.4",
         "penthouse": "^2.0.0",
