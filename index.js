@@ -68,8 +68,8 @@ function criticalReader(res, url, width, height) {
 	  }
 }
 
-app.get('/critical/:url/:width/:height', async (req, res) => {
-	criticalReader(res, req.params.url, req.params.width, req.params.height);
+app.get('/critical/', async (req, res) => {
+	criticalReader(res, req.query.url, req.query.width, req.query.height);
     return;
 });
 
