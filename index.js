@@ -1,17 +1,3 @@
-// const http = require('http');
-
-// const server = http.createServer((request, response) => {
-    // response.writeHead(200, {"Content-Type": "text/plain"});
-    // response.end("Hello World!");
-// });
-
-// const port = process.env.PORT || 1337;
-// server.listen(port);
-
-// console.log("Server running at http://localhost:%d", port);
-
-
-
 const penthouse = require('penthouse')
 const puppeteer = require('puppeteer') // installed by penthouse
 const http = require('http');
@@ -19,35 +5,44 @@ const critical = require('critical');
 const { promisify } = require('util')
 const express = require('express');
 
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+let IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
-const getBrowser = () => puppeteer.connect({ browserWSEndpoint: 'wss://chrome.browserless.io' });
+let getBrowser = () => puppeteer.connect({ browserWSEndpoint: 'wss://chrome.browserless.io', ignoreHTTPSErrors: true, args: ['--disable-setuid-sandbox', '--no-sandbox'],defaultViewport: {width: 1300, height: 1500} });
+
+// if(!IS_PRODUCTION)
+// {
+	// console.log("local environment launching");
+	// getBrowser = () => puppeteer.launch({
+	  // ignoreHTTPSErrors: true,
+	  // args: ['--disable-setuid-sandbox', '--no-sandbox'],
+	  // // not required to specify here, but saves Penthouse some work if you will
+	  // // re-use the same viewport for most penthouse calls.
+	  // defaultViewport: {
+		// width: 1300,
+		// height: 900
+	  // }
+	// });
+// }
 
 const app = express();
 
-function testa()
-{
-	console.log("begin testa");
-}
-
 function criticalReader(res) {
-	  console.log("begin reading");
 	  try {
 		  var criticalresult = critical.generate({
-			src: 'http://www.tyack.com.au',
+			src: 'https://www.example.com/',
 			minify: true,
 			inline: false,
 			extract: false,
 			timeout: 30000,
 			penthouse: {
-			  url: 'https://www.tyackhealth.com.au',
-			  cssString: 'body { color: red }',
+			  url: 'https://www.example.com/',
+			  cssstring: '',
 			  puppeteer: {
-				getBrowser: getBrowser
+				getbrowser: getBrowser
 			  }
 			},
 			width: 1300,
-			height: 900
+			height: 1500
 		}).then(function (result) {
 			console.log("promise resolved");
 			console.log("criticalresult -> " + typeof result);
@@ -63,16 +58,6 @@ function criticalReader(res) {
 }
 
 app.get('/image', async (req, res) => {
-    // const browser = await getBrowser();
-	// console.log(typeof browser)
-    // const page = await browser.newPage();
-
-    // await page.goto('http://www.example.com/');
-    // const screenshot = await page.screenshot();
-
-    // return res.end(screenshot, 'binary');
-	//console.log("critical reader " + criticalReader);
-	//console.log("critical reader 2" + exports.criticalReader);
 	criticalReader(res);
     return;
 });
