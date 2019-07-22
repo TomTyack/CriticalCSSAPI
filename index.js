@@ -63,7 +63,7 @@ app.use((req, res, next) => {
 
 })
 
-function criticalReader(res, url, width, height) {
+function criticalReader(res, url) {
 	  
 	  let decodedUrl = decodeURIComponent(url);
 	  
@@ -107,13 +107,17 @@ function criticalReader(res, url, width, height) {
 }
 
 app.get(config.api, async (req, res) => {
-	  criticalReader(res, req.query.url, req.query.width, req.query.height);
+    config.width = req.query.width;
+    config.height = req.query.height;
+	  criticalReader(res, req.query.url);
     return;
 });
 
 app.post(config.apiWithFontMap, async (req, res) => {
 	config.fontmap = req.body.fontmap;
-	criticalReader(res, req.query.url, req.query.width, req.query.height);
+  config.width = req.body.width;
+  config.height = req.body.height;
+	criticalReader(res, req.body.url);
 	return;
 });
 
