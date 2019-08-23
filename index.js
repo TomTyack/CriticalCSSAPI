@@ -63,24 +63,30 @@ app.use((req, res, next) => {
 
 })
 
-function criticalReader(res, url) {
+function criticalReader(response, url) {
+	  	  
+	  console.log("Looking up URL " + url);
 	  
-	  let decodedUrl = decodeURIComponent(url);
-	  
-	  console.log("Looking up URL " + decodedUrl);
-	  
-	  res.set('Content-Type', 'application/json');
-		res.type('application/json');
+	  response.set('Content-Type', 'application/json');
+		response.type('application/json');
 		var progress = "1";
 	  try {
+    
+      console.log("width: " + config.width);
+      console.log("timeout: " + config.timeout);
+    
+      console.log("height: " + config.height);
+      console.log("about to call critical.generate");
+      console.log("url: " + url);
+          
 		  var criticalresult = critical.generate({
-			src: decodedUrl,
+			src: url,
 			minify: true,
 			inline: false,
 			extract: true,
 			timeout: config.timeout,
 			penthouse: {
-			  url: decodedUrl,
+			  url: url,
 			  cssString: '',
 			  puppeteer: {
 				getBrowser: getBrowser
@@ -89,28 +95,50 @@ function criticalReader(res, url) {
 			width: config.width,
 			height: config.height
 		}).then(function (result) {
-			progress = "2";
+			
+      console.log("critical generation Completed - result:" + result);
+      
+      progress = "2";
 			let cleanedUpCcss = new CleanCss({ compress: true }).minify(result).styles;
       progress = "3";
+      
+      console.log("css was cleaned up");
+      
 			var resSwitched = switchFontPaths(cleanedUpCcss);
+      
+      console.log("font paths were switched");
+      
       progress = "4";
       var res2 = removeDuplicates(resSwitched);
+      
+      console.log("duplicated removed");
+      
       progress = "5";
       var res3 = switchFontFaceNames(res2);
+      
+      console.log("font names switch for critical");
+      
       progress = "6";
       
-			res.json({ result: res3 }).end();
+      console.log("sending back a result: " + res3);
+      
+			response.json({ result: res3 }).end();
       progress = "7";
-		
     }).catch(function (err) {
-			 res.status(500);
-			 res.json({ error: "inside error: "+progress + " - " +err }).end();
+			 console.log("inside error: " + err);
+       
+       if(err && err.message)
+          console.log("inside error: " + err.message);
+          
+       response.status(500);
+			 response.json({ error: "inside error: "+progress + " - " +err }).end();
 		}); 
 			
-		console.log("completed");
+		console.log("line after critical generation was hit - waiting for callback");
 	  } catch (err) {
-			res.status(500);
-			res.json({ error: "outside error: "+progress + " - " +err }).end();
+      console.log("outside error: " + err);
+			response.status(500);
+			response.json({ error: "outside error: "+progress + " - " +err }).end();
 	  }
 }
 
@@ -127,6 +155,9 @@ app.post(config.apiWithFontMap, async (req, res) => {
   config.fontFaceSwitch = req.body.fontFaceSwitch;
   config.width = req.body.width;
   config.height = req.body.height;
+  
+  console.log("POST Critical with fontMap option started ");
+  
 	criticalReader(res, req.body.url);
 	return;
 });

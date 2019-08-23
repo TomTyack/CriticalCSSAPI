@@ -6,8 +6,8 @@
   "apiUsername" : "critical",
   "apiPassword" : "generator",
   "timeout": 30000,
-  "width": 1800,
-  "height": 1100,
+  "width": "1800",
+  "height": "1100",
   "fontmap": [
     {
       "find": "../../",
