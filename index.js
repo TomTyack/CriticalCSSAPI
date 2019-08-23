@@ -71,7 +71,7 @@ function criticalReader(res, url) {
 	  
 	  res.set('Content-Type', 'application/json');
 		res.type('application/json');
-		
+		var progress = "1";
 	  try {
 		  var criticalresult = critical.generate({
 			src: decodedUrl,
@@ -89,20 +89,28 @@ function criticalReader(res, url) {
 			width: config.width,
 			height: config.height
 		}).then(function (result) {
-			
+			progress = "2";
 			let cleanedUpCcss = new CleanCss({ compress: true }).minify(result).styles;
-			var fontReplaceResult = switchFontPaths(cleanedUpCcss);
-			res.json({ result: fontReplaceResult }).end();
-
-		}).catch(function (err) {
+      progress = "3";
+			var resSwitched = switchFontPaths(cleanedUpCcss);
+      progress = "4";
+      var res2 = removeDuplicates(resSwitched);
+      progress = "5";
+      var res3 = switchFontFaceNames(res2);
+      progress = "6";
+      
+			res.json({ result: res3 }).end();
+      progress = "7";
+		
+    }).catch(function (err) {
 			 res.status(500);
-			 res.json({ error: "inside error: "+progress+err }).end();
+			 res.json({ error: "inside error: "+progress + " - " +err }).end();
 		}); 
 			
 		console.log("completed");
 	  } catch (err) {
 			res.status(500);
-			res.json({ error: "outside error: "+progress }).end();
+			res.json({ error: "outside error: "+progress + " - " +err }).end();
 	  }
 }
 
@@ -115,6 +123,8 @@ app.get(config.api, async (req, res) => {
 
 app.post(config.apiWithFontMap, async (req, res) => {
 	config.fontmap = req.body.fontmap;
+  config.removeduplicates = req.body.removeduplicates;
+  config.fontFaceSwitch = req.body.fontFaceSwitch;
   config.width = req.body.width;
   config.height = req.body.height;
 	criticalReader(res, req.body.url);
@@ -127,12 +137,45 @@ app.listen(port);
 console.log("Server running on port %d", port);
 
 var switchFontPaths = function replaceAll(input) {
-	var output2 = input;
-	config.fontmap.forEach(function (fontReplacement) {
-			console.log("fontReplacement.find -- " + fontReplacement.find + " -> " + fontReplacement.replace);
-			output2 = findReplace(output2, fontReplacement.find, fontReplacement.replace);
-	});
-	return output2;
+    var output2 = input;
+    
+    if(!config.fontmap)
+      return output2;
+      
+    config.fontmap.forEach(function (fontReplacement) {
+        console.log("fontReplacement.find -- " + fontReplacement.find + " -> " + fontReplacement.replace);
+        output2 = findReplace(output2, fontReplacement.find, fontReplacement.replace);
+    });
+    return output2;
+};
+
+var switchFontFaceNames = function replaceAll(input) {
+    var output3 = input;
+    
+    if(!config.fontFaceSwitch)
+      return output3;
+      
+    config.fontFaceSwitch.forEach(function (fontFaceSwitch) {
+        console.log("fontFaceSwitch.find -- " + fontFaceSwitch.find + " -> " + fontFaceSwitch.replace);
+        output3 = findReplace(output3, fontFaceSwitch.find, fontFaceSwitch.replace);
+    });
+    return output3;
+};
+
+var removeDuplicates = function removeDups(input) {
+    var output2 = input;
+    
+        
+    if(!config.removeduplicates)
+      return output2;
+      
+    
+    config.removeduplicates.forEach(function (fontReplacement) {
+        console.log("fontReplacement.find -- " + fontReplacement.find);
+        output2 = findReplace(output2, fontReplacement.find, "");
+        output2 += fontReplacement.find;
+    });
+    return output2;
 };
 
 var findReplace = function (str, find, replaceToken) {
